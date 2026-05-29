@@ -43,7 +43,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_kev_matches_in_environment",
+          "expr": "last_over_time(tib_kev_matches_in_environment[8h])",
           "legendFormat": "KEV Matches",
           "refId": "A"
         }
@@ -76,7 +76,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_kev_total",
+          "expr": "last_over_time(tib_kev_total[8h])",
           "legendFormat": "KEV Total",
           "refId": "A"
         }
@@ -114,7 +114,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "count(tib_cve_epss_score > 0.5) or vector(0)",
+          "expr": "count(last_over_time(tib_cve_epss_score[8h]) > 0.5) or vector(0)",
           "legendFormat": "High EPSS",
           "refId": "A"
         }
@@ -299,7 +299,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_kev_match",
+          "expr": "last_over_time(tib_kev_match[8h])",
           "instant": true,
           "legendFormat": "{{cve_id}}",
           "refId": "A"
@@ -352,7 +352,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "topk(50, tib_cve_epss_score)",
+          "expr": "topk(50, last_over_time(tib_cve_epss_score[8h]))",
           "instant": true,
           "legendFormat": "{{cve_id}}",
           "refId": "A"
