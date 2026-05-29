@@ -1,0 +1,366 @@
+{
+  "uid": "tib-overview",
+  "title": "TIB — Threat Intelligence Overview",
+  "description": "Cross-reference running CVEs against CISA KEV and EPSS",
+  "tags": ["tib", "threat-intelligence", "security"],
+  "refresh": "5m",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "KEV Matches in Environment",
+      "description": "Running containers with CVEs on the CISA Known Exploited Vulnerabilities catalog",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "tib_kev_matches_in_environment",
+          "legendFormat": "KEV Matches",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Total KEV Catalog",
+      "description": "Total CVEs in CISA KEV catalog",
+      "gridPos": { "h": 4, "w": 4, "x": 6, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "mappings": []
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "tib_kev_total",
+          "legendFormat": "KEV Total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "High EPSS CVEs (>50%)",
+      "description": "CVEs in environment with >50% exploitation probability",
+      "gridPos": { "h": 4, "w": 4, "x": 10, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "count(tib_cve_epss_score > 0.5) or vector(0)",
+          "legendFormat": "High EPSS",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Last Sync",
+      "gridPos": { "h": 4, "w": 4, "x": 14, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeAsLocal",
+          "color": { "mode": "fixed", "fixedColor": "text" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "text", "value": null }]
+          },
+          "mappings": []
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "tib_last_sync_timestamp{feed=\"cisa-kev\"}",
+          "legendFormat": "Last Sync",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "KEV Matches Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 15,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "tib_kev_matches_in_environment",
+          "legendFormat": "KEV Matches",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "EPSS Score Distribution Over Time",
+      "description": "Max EPSS score seen in environment",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "max(tib_cve_epss_score)",
+          "legendFormat": "Max EPSS",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "quantile(0.9, tib_cve_epss_score)",
+          "legendFormat": "p90 EPSS",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "KEV Matches — Active Exploitation in Your Environment",
+      "description": "CVEs actively exploited in the wild (CISA KEV) found in your running containers",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 12 },
+      "options": {
+        "sortBy": [{ "displayName": "Severity", "desc": true }],
+        "footer": { "show": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "cve_id" },
+            "properties": [
+              { "id": "displayName", "value": "CVE ID" },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "NVD",
+                    "url": "https://nvd.nist.gov/vuln/detail/${__value.raw}"
+                  },
+                  {
+                    "title": "CISA KEV",
+                    "url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+                  }
+                ]
+              }
+            ]
+          },
+          { "matcher": { "id": "byName", "options": "image" }, "properties": [{ "id": "displayName", "value": "Image" }] },
+          { "matcher": { "id": "byName", "options": "severity" }, "properties": [{ "id": "displayName", "value": "Severity" }] },
+          { "matcher": { "id": "byName", "options": "vendor" }, "properties": [{ "id": "displayName", "value": "Vendor" }] },
+          { "matcher": { "id": "byName", "options": "product" }, "properties": [{ "id": "displayName", "value": "Product" }] },
+          { "matcher": { "id": "byName", "options": "due_date" }, "properties": [{ "id": "displayName", "value": "KEV Due Date" }] },
+          { "matcher": { "id": "byName", "options": "ransomware" }, "properties": [{ "id": "displayName", "value": "Ransomware" }] },
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "displayName", "value": "Active" },
+              { "id": "custom.width", "value": 70 },
+              { "id": "mappings", "value": [{ "type": "value", "options": { "1": { "text": "YES", "color": "red", "index": 0 } } }] },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "value",
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "tib_kev_match",
+          "instant": true,
+          "legendFormat": "{{cve_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Top CVEs by EPSS Score",
+      "description": "Highest exploitation probability CVEs in your environment — sort by EPSS to prioritise patching",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 22 },
+      "options": {
+        "sortBy": [{ "displayName": "EPSS Score", "desc": true }],
+        "footer": { "show": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "left", "displayMode": "auto" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "cve_id" },
+            "properties": [
+              { "id": "displayName", "value": "CVE ID" },
+              {
+                "id": "links",
+                "value": [{ "title": "NVD", "url": "https://nvd.nist.gov/vuln/detail/${__value.raw}" }]
+              }
+            ]
+          },
+          { "matcher": { "id": "byName", "options": "image" }, "properties": [{ "id": "displayName", "value": "Image" }] },
+          { "matcher": { "id": "byName", "options": "severity" }, "properties": [{ "id": "displayName", "value": "Severity" }] },
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "displayName", "value": "EPSS Score" },
+              { "id": "unit", "value": "percentunit" },
+              { "id": "custom.displayMode", "value": "color-background-gradient" },
+              { "id": "color", "value": { "mode": "continuous-YlOrRd" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.1 }, { "color": "red", "value": 0.5 }] } }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        { "id": "labelsToFields", "options": { "valueLabel": "value", "mode": "columns" } },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true }, "indexByName": {}, "renameByName": {} } }
+      ],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "tib-vm" },
+          "expr": "topk(50, tib_cve_epss_score)",
+          "instant": true,
+          "legendFormat": "{{cve_id}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "links": []
+}
