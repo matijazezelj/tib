@@ -173,7 +173,7 @@ def fetch_vib_cves() -> list[dict]:
     try:
         r = SESSION.get(
             f"{VIB_VICTORIAMETRICS_URL}/api/v1/query",
-            params={"query": "vib_cve_info"},
+            params={"query": "last_over_time(vib_cve_info[8h])"},
             timeout=15,
         )
         r.raise_for_status()
