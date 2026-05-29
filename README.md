@@ -8,6 +8,8 @@ No API keys required. No cloud accounts. Fully self-hosted.
 
 Part of the [in-a-box-tools](https://in-a-box-tools.tech) ecosystem.
 
+![Dashboard preview](docs/dashboard-preview.png)
+
 ---
 
 ## What you get
