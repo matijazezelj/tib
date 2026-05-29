@@ -15,13 +15,13 @@ services:
       - tib
 
   tib-victoriametrics:
-    image: victoriametrics/victoria-metrics:stable
+    image: victoriametrics/victoria-metrics:latest
     container_name: tib-victoriametrics
     restart: unless-stopped
     ports:
       - "${VICTORIAMETRICS_PORT:-8430}:8428"
     volumes:
-      - victoriametrics-data:/storage
+      - tib-victoriametrics-data:/storage
     command:
       - --storageDataPath=/storage
       - --retentionPeriod=${VICTORIAMETRICS_RETENTION:-90d}
@@ -41,7 +41,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/tib-overview.json
     volumes:
-      - grafana-data:/var/lib/grafana
+      - tib-grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
@@ -53,5 +53,5 @@ networks:
 
 volumes:
   tib-data:
-  victoriametrics-data:
-  grafana-data:
+  tib-victoriametrics-data:
+  tib-grafana-data:
