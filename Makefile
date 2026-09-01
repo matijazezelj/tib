@@ -19,5 +19,4 @@ sync-now:
 	docker exec tib-collector python /app/collector.py --once
 
 clean:
-	docker compose down -v
-	docker rmi tib-collector 2>/dev/null || true
+	docker compose down -v --rmi local
