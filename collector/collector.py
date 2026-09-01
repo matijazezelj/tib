@@ -198,7 +198,7 @@ def fetch_vib_cves() -> list[dict]:
 # ── Metric helpers ────────────────────────────────────────────────────────────
 
 def _safe_label(s: str) -> str:
-    return str(s).replace('"', '\\"').replace("\n", "").replace("\\", "\\\\")
+    return str(s).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
 def _ts_ms() -> int:
