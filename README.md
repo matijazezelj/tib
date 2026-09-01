@@ -52,7 +52,8 @@ Open **http://localhost:3002** — login `admin` / your `GRAFANA_ADMIN_PASSWORD`
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GRAFANA_ADMIN_PASSWORD` | auto-generated | Grafana admin password |
+| `GRAFANA_ADMIN_PASSWORD` | `changeme` | Grafana admin password — set this before exposing Grafana |
+| `BIND_ADDR` | `127.0.0.1` | Interface the published ports bind to; `0.0.0.0` to expose on the LAN |
 | `GRAFANA_PORT` | `3002` | Host port for Grafana |
 | `VICTORIAMETRICS_PORT` | `8430` | Host port for VictoriaMetrics |
 | `SYNC_INTERVAL_HOURS` | `6` | Feed sync frequency |
