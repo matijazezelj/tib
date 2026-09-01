@@ -7,8 +7,6 @@ and pushes correlation results to VictoriaMetrics.
 
 import csv
 import gzip
-import io
-import json
 import logging
 import os
 import sqlite3
@@ -19,6 +17,8 @@ from pathlib import Path
 
 import requests
 import schedule
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,10 +36,18 @@ SYNC_ON_STARTUP = os.environ.get("SYNC_ON_STARTUP", "true").lower() == "true"
 DB_PATH = Path(os.environ.get("DB_PATH", "/data/tib.db"))
 
 CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-EPSS_API_URL = "https://api.first.org/data/v1/epss"
+EPSS_FEED_URL = "https://epss.empiricalsecurity.com/epss_scores-current.csv.gz"
 
 SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "TIB/0.1 (Threat Intelligence in a Box)"
+SESSION.mount(
+    "http://",
+    HTTPAdapter(max_retries=Retry(total=3, backoff_factor=2, status_forcelist=(429, 500, 502, 503, 504))),
+)
+SESSION.mount(
+    "https://",
+    HTTPAdapter(max_retries=Retry(total=3, backoff_factor=2, status_forcelist=(429, 500, 502, 503, 504))),
+)
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
@@ -126,41 +134,43 @@ def sync_kev(conn: sqlite3.Connection) -> int:
 
 # ── EPSS sync ─────────────────────────────────────────────────────────────────
 
-def sync_epss_for_cves(conn: sqlite3.Connection, cve_ids: list[str]) -> int:
-    """Fetch EPSS scores for a specific list of CVEs (API supports up to 100 per call)."""
-    if not cve_ids:
+def sync_epss(conn: sqlite3.Connection) -> int:
+    """Load the full daily EPSS score set from the published CSV snapshot."""
+    logger.info("Syncing EPSS scores...")
+    try:
+        r = SESSION.get(EPSS_FEED_URL, timeout=120)
+        r.raise_for_status()
+        text = gzip.decompress(r.content).decode("utf-8")
+    except Exception as e:
+        logger.error("EPSS fetch failed: %s", e)
         return 0
 
     now = datetime.now(timezone.utc).isoformat()
-    fetched = 0
-    chunk_size = 100
+    # The snapshot opens with a "#model_version:...,score_date:..." comment line.
+    reader = csv.DictReader(line for line in text.splitlines() if not line.startswith("#"))
 
-    for i in range(0, len(cve_ids), chunk_size):
-        chunk = cve_ids[i : i + chunk_size]
+    rows = []
+    for row in reader:
         try:
-            r = SESSION.get(
-                EPSS_API_URL,
-                params={"cve": ",".join(chunk), "envelope": "true"},
-                timeout=30,
-            )
-            r.raise_for_status()
-            data = r.json().get("data", [])
-        except Exception as e:
-            logger.warning("EPSS fetch failed for chunk: %s", e)
+            rows.append((row["cve"], float(row["epss"]), float(row["percentile"]), now))
+        except (KeyError, TypeError, ValueError):
             continue
 
-        conn.executemany(
-            "INSERT OR REPLACE INTO epss (cve_id, score, percentile, synced_at) VALUES (?,?,?,?)",
-            [(d["cve"], float(d["epss"]), float(d["percentile"]), now) for d in data],
-        )
-        fetched += len(data)
+    if not rows:
+        logger.error("EPSS feed contained no usable rows — keeping previous scores")
+        return 0
 
+    conn.executemany(
+        "INSERT OR REPLACE INTO epss (cve_id, score, percentile, synced_at) VALUES (?,?,?,?)",
+        rows,
+    )
     conn.execute(
         "INSERT OR REPLACE INTO feed_meta (feed, last_synced, entry_count) VALUES (?,?,?)",
-        ("epss", now, fetched),
+        ("epss", now, len(rows)),
     )
     conn.commit()
-    return fetched
+    logger.info("EPSS synced: %d entries", len(rows))
+    return len(rows)
 
 
 # ── VIB integration ───────────────────────────────────────────────────────────
@@ -228,18 +238,13 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
         _push_lines(lines)
         return
 
-    vib_cve_ids = list({c["cve_id"] for c in vib_cves if c["cve_id"]})
-
-    # Fetch EPSS for all current VIB CVEs
-    sync_epss_for_cves(conn, vib_cve_ids)
+    affected = sorted(
+        {(c["cve_id"], c["image"], c["severity"]) for c in vib_cves if c["cve_id"]}
+    )
 
     # Cross-reference: which VIB CVEs are in KEV?
     kev_matches = 0
-    for cve in vib_cves:
-        cve_id = cve["cve_id"]
-        if not cve_id:
-            continue
-
+    for cve_id, image, severity in affected:
         kev_row = conn.execute(
             "SELECT vendor_project, product, due_date, known_ransomware FROM kev WHERE cve_id=?",
             (cve_id,),
@@ -253,12 +258,12 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
             score, percentile = epss_row
             lines.append(
                 f'tib_cve_epss_score{{cve_id="{_safe_label(cve_id)}",'
-                f'image="{_safe_label(cve["image"])}",'
-                f'severity="{_safe_label(cve["severity"])}"}} {score:.6f} {ts}'
+                f'image="{_safe_label(image)}",'
+                f'severity="{_safe_label(severity)}"}} {score:.6f} {ts}'
             )
             lines.append(
                 f'tib_cve_epss_percentile{{cve_id="{_safe_label(cve_id)}",'
-                f'image="{_safe_label(cve["image"])}"}} {percentile:.6f} {ts}'
+                f'image="{_safe_label(image)}"}} {percentile:.6f} {ts}'
             )
 
         if kev_row:
@@ -266,8 +271,8 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
             kev_matches += 1
             lines.append(
                 f'tib_kev_match{{cve_id="{_safe_label(cve_id)}",'
-                f'image="{_safe_label(cve["image"])}",'
-                f'severity="{_safe_label(cve["severity"])}",'
+                f'image="{_safe_label(image)}",'
+                f'severity="{_safe_label(severity)}",'
                 f'vendor="{_safe_label(vendor or "")}",'
                 f'product="{_safe_label(product or "")}",'
                 f'due_date="{_safe_label(due_date or "")}",'
@@ -284,7 +289,7 @@ def _push_lines(lines: list[str]) -> None:
         return
     payload = "\n".join(lines) + "\n"
     try:
-        requests.post(
+        SESSION.post(
             f"{VICTORIAMETRICS_URL}/api/v1/import/prometheus",
             data=payload,
             headers={"Content-Type": "text/plain"},
@@ -299,6 +304,7 @@ def _push_lines(lines: list[str]) -> None:
 def run_sync(conn: sqlite3.Connection) -> None:
     logger.info("─── TIB sync starting ───")
     sync_kev(conn)
+    sync_epss(conn)
 
     vib_cves = fetch_vib_cves()
     if vib_cves:
@@ -310,8 +316,24 @@ def run_sync(conn: sqlite3.Connection) -> None:
     logger.info("─── TIB sync complete ───")
 
 
+def wait_for_victoriametrics(timeout: float = 120.0) -> bool:
+    """Block until the local VictoriaMetrics accepts traffic, so a startup sync
+    doesn't silently discard its metrics while the container is still booting."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            SESSION.get(f"{VICTORIAMETRICS_URL}/health", timeout=5).raise_for_status()
+            return True
+        except Exception as e:
+            if time.monotonic() >= deadline:
+                logger.warning("VictoriaMetrics not ready after %.0fs: %s", timeout, e)
+                return False
+            time.sleep(3)
+
+
 def main() -> None:
     conn = init_db()
+    wait_for_victoriametrics()
 
     if "--once" in sys.argv:
         run_sync(conn)

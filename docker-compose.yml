@@ -11,6 +11,8 @@ services:
       - VIB_VICTORIAMETRICS_URL=${VIB_VICTORIAMETRICS_URL:-}
       - SYNC_INTERVAL_HOURS=${SYNC_INTERVAL_HOURS:-6}
       - SYNC_ON_STARTUP=${SYNC_ON_STARTUP:-true}
+    depends_on:
+      - tib-victoriametrics
     networks:
       - tib
 

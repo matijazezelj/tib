@@ -17,7 +17,7 @@ Part of the [in-a-box-tools](https://in-a-box-tools.tech) ecosystem.
 | Feed | Description |
 |------|-------------|
 | **CISA KEV** | ~1,200 CVEs with confirmed exploitation in the wild — the authoritative "fix these now" list |
-| **EPSS** | Exploitation probability score (0–1) from FIRST.org — prioritise your patching backlog |
+| **EPSS** | Exploitation probability score (0–1) for every published CVE — prioritise your patching backlog |
 
 Cross-referenced against your VIB environment:
 - Which of your running CVEs are on KEV?
