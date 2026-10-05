@@ -14,7 +14,7 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "KEV Matches in Environment",
+      "title": "Known-exploited CVEs in Your Environment",
       "description": "Running containers with CVEs on the CISA Known Exploited Vulnerabilities catalog",
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
       "options": {
@@ -43,8 +43,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "last_over_time(tib_kev_matches_in_environment[8h])",
-          "legendFormat": "KEV Matches",
+          "expr": "last_over_time(tib_kev_distinct_cves[8h])",
+          "legendFormat": "Distinct KEV CVEs",
           "refId": "A"
         }
       ]
@@ -156,7 +156,7 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "KEV Matches Over Time",
+      "title": "Known-exploited CVEs Over Time",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "options": {
         "tooltip": { "mode": "multi", "sort": "none" },
@@ -179,8 +179,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_kev_matches_in_environment",
-          "legendFormat": "KEV Matches",
+          "expr": "tib_kev_distinct_cves",
+          "legendFormat": "Distinct KEV CVEs",
           "refId": "A"
         }
       ]

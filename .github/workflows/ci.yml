@@ -23,3 +23,7 @@ jobs:
           docker compose config >/tmp/compose.yml
       - name: Python syntax
         run: python -m py_compile collector/collector.py
+      - name: Collector tests
+        run: |
+          pip install -q -r collector/requirements.txt
+          python -m unittest discover -s collector/tests -v

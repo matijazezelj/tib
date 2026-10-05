@@ -235,6 +235,9 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
 
     if not vib_cves:
         lines.append(f"tib_kev_matches_in_environment 0 {ts}")
+        lines.append(f"tib_kev_distinct_cves 0 {ts}")
+        lines.append(f"tib_kev_affected_images 0 {ts}")
+        lines.append(f"tib_vib_cve_rows_correlated 0 {ts}")
         _push_lines(lines)
         return
 
@@ -244,6 +247,8 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
 
     # Cross-reference: which VIB CVEs are in KEV?
     kev_matches = 0
+    kev_cves: set[str] = set()
+    kev_images: set[tuple[str, str]] = set()
     for cve_id, image, severity in affected:
         kev_row = conn.execute(
             "SELECT vendor_project, product, due_date, known_ransomware FROM kev WHERE cve_id=?",
@@ -269,6 +274,8 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
         if kev_row:
             vendor, product, due_date, ransomware = kev_row
             kev_matches += 1
+            kev_cves.add(cve_id)
+            kev_images.add((image, cve_id))
             lines.append(
                 f'tib_kev_match{{cve_id="{_safe_label(cve_id)}",'
                 f'image="{_safe_label(image)}",'
@@ -280,8 +287,20 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
             )
 
     lines.append(f"tib_kev_matches_in_environment {kev_matches} {ts}")
+    # The line above counts (CVE, image, severity) rows, which is neither "how many
+    # known-exploited CVEs do I have" nor "how many images are affected" -- and the
+    # README did not say which. Export both questions explicitly.
+    lines.append(f"tib_kev_distinct_cves {len(kev_cves)} {ts}")
+    lines.append(f"tib_kev_affected_images {len(kev_images)} {ts}")
+    # When the VIB data this correlation used was read, and how many CVE rows it
+    # contained. A correlation computed from an empty or half-loaded VIB looks
+    # identical to a clean bill of health unless this is visible.
+    lines.append(f"tib_vib_cve_rows_correlated {len(vib_cves)} {ts}")
     _push_lines(lines)
-    logger.info("Metrics pushed — KEV matches in environment: %d", kev_matches)
+    logger.info(
+        "Metrics pushed — KEV: %d match rows, %d distinct CVEs, %d affected images (from %d VIB CVE rows)",
+        kev_matches, len(kev_cves), len(kev_images), len(vib_cves),
+    )
 
 
 def _push_lines(lines: list[str]) -> None:
