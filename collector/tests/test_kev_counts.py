@@ -64,7 +64,13 @@ class TestKevCounts(unittest.TestCase):
         cves = [row("CVE-A", "img1", "MEDIUM"), row("CVE-A", "img2", "MEDIUM"), row("CVE-B", "img3", "HIGH", pkg="x"), row("CVE-B", "img3", "HIGH", pkg="y")]
         m = run(conn, cves)
         self.assertEqual(m["tib_kev_distinct_cves"], 2)
-        self.assertEqual(m["tib_kev_affected_images"], 3)
+        self.assertEqual(m["tib_kev_affected_images"], 3)  # img1, img2, img3
+
+    def test_one_image_with_several_kev_cves_is_one_affected_image(self):
+        conn = make_db(["CVE-1", "CVE-2", "CVE-3"])
+        m = run(conn, [row("CVE-1", "a"), row("CVE-2", "a"), row("CVE-3", "a")])
+        self.assertEqual(m["tib_kev_distinct_cves"], 3)
+        self.assertEqual(m["tib_kev_affected_images"], 1)
 
     def test_correlation_input_size_is_exported(self):
         conn = make_db(["CVE-1"])
