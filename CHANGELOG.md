@@ -15,6 +15,9 @@
   sync, and retries transient feed and ingest failures
 
 ### Fixed
+- The KEV headline said "4" while the table beneath it listed two CVEs. It counted `(CVE, image, severity)` rows, so one CVE on three images, or one image with several
+  affected packages, inflated it. New gauges `tib_kev_distinct_cves` (headline) and `tib_kev_affected_images` answer the two questions people actually ask, and
+  `tib_vib_cve_rows_correlated` shows how much VIB data a correlation used. The dashboard now charts the distinct counts.
 - Metric label escaping applied backslash escaping last, re-escaping the
   backslash added for a quote. VictoriaMetrics answered 204 and dropped the
   line, so any metric with a quote in a label silently never arrived
