@@ -81,7 +81,7 @@ VIB_VICTORIAMETRICS_URL=http://vib-victoriametrics:8428
 | Metric | Labels | Description |
 |--------|--------|-------------|
 | `tib_kev_distinct_cves` | — | Distinct KEV CVEs present in scanned images (a CVE on three images counts once). **This is the headline number.** |
-| `tib_kev_affected_images` | — | Distinct (image, CVE) pairs that are KEV-listed |
+| `tib_kev_affected_images` | — | Distinct images containing at least one KEV-listed CVE |
 | `tib_kev_matches_in_environment` | — | Number of `tib_kev_match` rows (one per CVE x image x severity). Kept for compatibility; prefer the two above |
 | `tib_vib_cve_rows_correlated` | — | How many VIB CVE rows the last correlation read. `0` with a healthy VIB means the correlation ran on nothing |
 | `tib_kev_match` | `cve_id`, `image`, `severity`, `vendor`, `product`, `due_date`, `ransomware` | 1 per active KEV match |

@@ -248,7 +248,7 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
     # Cross-reference: which VIB CVEs are in KEV?
     kev_matches = 0
     kev_cves: set[str] = set()
-    kev_images: set[tuple[str, str]] = set()
+    kev_images: set[str] = set()
     for cve_id, image, severity in affected:
         kev_row = conn.execute(
             "SELECT vendor_project, product, due_date, known_ransomware FROM kev WHERE cve_id=?",
@@ -275,7 +275,7 @@ def push_metrics(conn: sqlite3.Connection, vib_cves: list[dict]) -> None:
             vendor, product, due_date, ransomware = kev_row
             kev_matches += 1
             kev_cves.add(cve_id)
-            kev_images.add((image, cve_id))
+            kev_images.add(image)
             lines.append(
                 f'tib_kev_match{{cve_id="{_safe_label(cve_id)}",'
                 f'image="{_safe_label(image)}",'
