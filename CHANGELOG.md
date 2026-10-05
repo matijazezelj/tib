@@ -15,6 +15,9 @@
   sync, and retries transient feed and ingest failures
 
 ### Fixed
+- The "Known-exploited CVEs Over Time" and "EPSS Score Distribution" graphs and the "Last Sync" stat queried the bare series. The collector writes every 6 h, but a bare
+  instant selector only looks back 5 minutes, so those panels were blank for 5 h 55 m out of every 6. They now use `last_over_time(...)` like the other panels, so each
+  value holds until the next sync.
 - The KEV and EPSS tables on the overview dashboard showed a single row however many matches existed (5 KEV matches, 1 row). Grafana returned one frame per
   series and the table displayed only the first; the `merge` transformation joins them. The `Value` column override is now keyed by metric name so the "Active"
   and "EPSS Score" formatting still applies after the merge.
