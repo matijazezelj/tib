@@ -15,6 +15,9 @@
   sync, and retries transient feed and ingest failures
 
 ### Fixed
+- The KEV and EPSS tables on the overview dashboard showed a single row however many matches existed (5 KEV matches, 1 row). Grafana returned one frame per
+  series and the table displayed only the first; the `merge` transformation joins them. The `Value` column override is now keyed by metric name so the "Active"
+  and "EPSS Score" formatting still applies after the merge.
 - The KEV headline said "4" while the table beneath it listed two CVEs. It counted `(CVE, image, severity)` rows, so one CVE on three images, or one image with several
   affected packages, inflated it. New gauges `tib_kev_distinct_cves` (headline) and `tib_kev_affected_images` (distinct images) answer the two questions people actually ask, and
   `tib_vib_cve_rows_correlated` shows how much VIB data a correlation used. The dashboard now charts the distinct counts.
