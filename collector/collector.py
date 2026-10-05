@@ -180,10 +180,19 @@ def fetch_vib_cves() -> list[dict]:
     if not VIB_VICTORIAMETRICS_URL:
         return []
 
+    # The 8h window can span two VIB scans, and on its own it also returns rows the
+    # previous scan reported and the latest did not. VIB stamps every sample with its
+    # scan's start time and pushes that start time as vib_last_scan_timestamp once the
+    # scan completes, so keep rows from the last completed scan or newer.
+    query = (
+        "last_over_time(vib_cve_info[8h]) and "
+        "tlast_over_time(vib_cve_info[8h]) >= "
+        "scalar(last_over_time(vib_last_scan_timestamp[8h])) - 1"
+    )
     try:
         r = SESSION.get(
             f"{VIB_VICTORIAMETRICS_URL}/api/v1/query",
-            params={"query": "last_over_time(vib_cve_info[8h])"},
+            params={"query": query},
             timeout=15,
         )
         r.raise_for_status()

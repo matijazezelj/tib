@@ -114,7 +114,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "count(last_over_time(tib_cve_epss_score[8h]) > 0.5) or vector(0)",
+          "expr": "count((last_over_time(tib_cve_epss_score[8h]) and tlast_over_time(tib_cve_epss_score[8h]) >= scalar(tlast_over_time(tib_kev_total[8h]))) > 0.5) or vector(0)",
           "legendFormat": "High EPSS",
           "refId": "A"
         }
@@ -213,13 +213,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "max(last_over_time(tib_cve_epss_score[8h]))",
+          "expr": "max(last_over_time(tib_cve_epss_score[8h]) and tlast_over_time(tib_cve_epss_score[8h]) >= scalar(tlast_over_time(tib_kev_total[8h])))",
           "legendFormat": "Max EPSS",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "quantile(0.9, last_over_time(tib_cve_epss_score[8h]))",
+          "expr": "quantile(0.9, (last_over_time(tib_cve_epss_score[8h]) and tlast_over_time(tib_cve_epss_score[8h]) >= scalar(tlast_over_time(tib_kev_total[8h]))))",
           "legendFormat": "p90 EPSS",
           "refId": "B"
         }
@@ -303,7 +303,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "last_over_time(tib_kev_match[8h])",
+          "expr": "(last_over_time(tib_kev_match[8h]) and tlast_over_time(tib_kev_match[8h]) >= scalar(tlast_over_time(tib_kev_total[8h])))",
           "instant": true,
           "legendFormat": "{{cve_id}}",
           "refId": "A"
@@ -357,7 +357,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "topk(50, last_over_time(tib_cve_epss_score[8h]))",
+          "expr": "topk(50, (last_over_time(tib_cve_epss_score[8h]) and tlast_over_time(tib_cve_epss_score[8h]) >= scalar(tlast_over_time(tib_kev_total[8h]))))",
           "instant": true,
           "legendFormat": "{{cve_id}}",
           "refId": "A"

@@ -15,6 +15,10 @@
   sync, and retries transient feed and ingest failures
 
 ### Fixed
+- `last_over_time(...[8h])` spans two syncs, so a row the previous sync reported and the latest did not was still counted. The collector read VIB that way and
+  correlated 15,123 CVE rows where VIB's latest scan had 10,800, which moved "High EPSS CVEs" from 30 to 46 and affected images from 3 to 5 with nothing new deployed.
+  The collector now keeps only rows from VIB's last completed scan or newer, and the per-CVE panels (High EPSS, EPSS distribution, KEV matches, top EPSS) keep only
+  series from TIB's latest sync. Both filters use `tlast_over_time`, which needs VictoriaMetrics.
 - The "Known-exploited CVEs Over Time" and "EPSS Score Distribution" graphs and the "Last Sync" stat queried the bare series. The collector writes every 6 h, but a bare
   instant selector only looks back 5 minutes, so those panels were blank for 5 h 55 m out of every 6. They now use `last_over_time(...)` like the other panels, so each
   value holds until the next sync.
