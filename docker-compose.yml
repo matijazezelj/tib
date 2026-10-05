@@ -17,7 +17,7 @@ services:
       - tib
 
   tib-victoriametrics:
-    image: victoriametrics/victoria-metrics:latest
+    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_TAG:-v1.153.0}
     container_name: tib-victoriametrics
     restart: unless-stopped
     ports:
@@ -32,14 +32,14 @@ services:
       - tib
 
   tib-grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:${GRAFANA_TAG:-13.2.3}
     container_name: tib-grafana
     restart: unless-stopped
     ports:
       - "${BIND_ADDR:-127.0.0.1}:${GRAFANA_PORT:-3002}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is not set; copy .env.example to .env and set it}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/tib-overview.json
     volumes:
