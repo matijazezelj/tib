@@ -183,9 +183,10 @@ def fetch_vib_cves() -> list[dict]:
     # The 8h window can span two VIB scans, and on its own it also returns rows the
     # previous scan reported and the latest did not. VIB stamps every sample with its
     # scan's start time and pushes that start time as vib_last_scan_timestamp once the
-    # scan completes, so keep rows from the last completed scan or newer.
+    # scan completes, so keep rows from the last completed scan or newer. VIB writes 0
+    # for a CVE a scan no longer reports, so a 0 row is a resolved CVE, not a live one.
     query = (
-        "last_over_time(vib_cve_info[8h]) and "
+        "(last_over_time(vib_cve_info[8h]) > 0) and "
         "tlast_over_time(vib_cve_info[8h]) >= "
         "scalar(last_over_time(vib_last_scan_timestamp[8h])) - 1"
     )
@@ -203,6 +204,8 @@ def fetch_vib_cves() -> list[dict]:
 
     cves = []
     for series in result:
+        if float(series.get("value", [0, "1"])[1]) <= 0:
+            continue
         labels = series.get("metric", {})
         cves.append({
             "cve_id": labels.get("cve_id", ""),
