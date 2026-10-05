@@ -147,7 +147,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_last_sync_timestamp{feed=\"cisa-kev\"}",
+          "expr": "last_over_time(tib_last_sync_timestamp{feed=\"cisa-kev\"}[7d])",
           "legendFormat": "Last Sync",
           "refId": "A"
         }
@@ -179,7 +179,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "tib_kev_distinct_cves",
+          "expr": "last_over_time(tib_kev_distinct_cves[8h])",
           "legendFormat": "Distinct KEV CVEs",
           "refId": "A"
         }
@@ -213,13 +213,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "max(tib_cve_epss_score)",
+          "expr": "max(last_over_time(tib_cve_epss_score[8h]))",
           "legendFormat": "Max EPSS",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "tib-vm" },
-          "expr": "quantile(0.9, tib_cve_epss_score)",
+          "expr": "quantile(0.9, last_over_time(tib_cve_epss_score[8h]))",
           "legendFormat": "p90 EPSS",
           "refId": "B"
         }
