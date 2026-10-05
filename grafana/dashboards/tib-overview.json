@@ -269,7 +269,7 @@
           { "matcher": { "id": "byName", "options": "due_date" }, "properties": [{ "id": "displayName", "value": "KEV Due Date" }] },
           { "matcher": { "id": "byName", "options": "ransomware" }, "properties": [{ "id": "displayName", "value": "Ransomware" }] },
           {
-            "matcher": { "id": "byName", "options": "Value" },
+            "matcher": { "id": "byName", "options": "tib_kev_match" },
             "properties": [
               { "id": "displayName", "value": "Active" },
               { "id": "custom.width", "value": 70 },
@@ -286,6 +286,10 @@
             "valueLabel": "value",
             "mode": "columns"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         },
         {
           "id": "organize",
@@ -334,7 +338,7 @@
           { "matcher": { "id": "byName", "options": "image" }, "properties": [{ "id": "displayName", "value": "Image" }] },
           { "matcher": { "id": "byName", "options": "severity" }, "properties": [{ "id": "displayName", "value": "Severity" }] },
           {
-            "matcher": { "id": "byName", "options": "Value" },
+            "matcher": { "id": "byName", "options": "tib_cve_epss_score" },
             "properties": [
               { "id": "displayName", "value": "EPSS Score" },
               { "id": "unit", "value": "percentunit" },
@@ -347,6 +351,7 @@
       },
       "transformations": [
         { "id": "labelsToFields", "options": { "valueLabel": "value", "mode": "columns" } },
+        { "id": "merge", "options": {} },
         { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true }, "indexByName": {}, "renameByName": {} } }
       ],
       "targets": [
