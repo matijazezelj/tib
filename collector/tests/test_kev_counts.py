@@ -84,5 +84,21 @@ class TestKevCounts(unittest.TestCase):
             self.assertEqual(m[k], 0, k)
 
 
+class TestFetchVibCves(unittest.TestCase):
+    def fetch(self, result):
+        resp = mock.Mock()
+        resp.json.return_value = {"data": {"result": result}}
+        with mock.patch.object(collector, "VIB_VICTORIAMETRICS_URL", "http://vib"), \
+             mock.patch.object(collector.SESSION, "get", return_value=resp) as get:
+            return collector.fetch_vib_cves(), get.call_args.kwargs["params"]["query"]
+
+    def test_zero_valued_row_is_a_resolved_cve_not_a_live_one(self):
+        live = {"metric": {"cve_id": "CVE-1", "image": "a", "severity": "HIGH"}, "value": [0, "7.5"]}
+        resolved = {"metric": {"cve_id": "CVE-2", "image": "a", "severity": "HIGH"}, "value": [0, "0"]}
+        cves, query = self.fetch([live, resolved])
+        self.assertEqual([c["cve_id"] for c in cves], ["CVE-1"])
+        self.assertIn("> 0", query)
+
+
 if __name__ == "__main__":
     unittest.main()
